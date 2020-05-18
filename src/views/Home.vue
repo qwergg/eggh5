@@ -10,16 +10,8 @@
             <span :style="{paddingLeft:'5px'}">{{img.userName}}</span>
             <h4>{{img.filename}}</h4>
           </div>
-          <!-- <video
-            :src="assetsUrl+img.url"
-            :poster="assetsUrl+img.imgUrl"
-            class="bg-video"
-            webkit-playsinline
-            controls
-          ></video> -->
-          <x-player :elId="'vi'+idx" :xPlayer="img"/>
+          <x-player :elId="'vi'+idx" :xPlayer="img" ref="vi"/>
     </div>
-     
     </van-col>
   </van-row>
 </template>
@@ -39,7 +31,71 @@ export default {
   mounted() {
     getReq({ whiteRole: true }, "getVideoList").then(res => {
       this.imageList = res.data;
-    });
+  })
+  },
+  methods:{
+    getViewport() { //获取当前页面可视区大小
+    if (document.compatMode == "BackCompat") {
+      return {
+        width: document.body.clientWidth,
+        height: document.body.clientHeight
+      }
+    } else {
+      return {
+        width: document.documentElement.clientWidth,
+        height: document.documentElement.clientHeight
+      }
+    }
+  },
+    getXplayerLocation(){ //获取视频所在位置(默认获取第一个)
+      let a = 0 // 设置一个初始值，
+      let DOMobj = '' // 用了保存getElementById获取到的元素数据
+      let clientData = this.getViewport() // 获取可视区的大小
+      DOMobj=document.getElementById(`vi${a}`)
+      let cliHeight = (clientData.height-DOMobj.offsetHeight)/2
+    },
+
+    getElementViewTop(element) { //获取当前元素的位置
+      var actualTop = element.offsetTop;
+      var current = element.offsetParent;
+
+      while (current !== null) {
+        actualTop += current.offsetTop;
+        current = current.offsetParent;
+      }
+
+      if (document.compatMode == "BackCompat") {
+        var elementScrollTop = document.body.scrollTop;
+      } else {
+        var elementScrollTop = document.documentElement.scrollTop;
+      }
+
+      return actualTop - elementScrollTop;
+    },
+    winScroll(e) {
+      let arr = this.getElementViewTop(DOMobj)
+      console.log(arr)
+      if (arr<=cliHeight && -arr<=DOMobj.offsetHeight/2) {
+        this.$refs.vi[a].play()
+      }else{
+        this.$refs.vi[a].pause()
+        if (-arr>DOMobj.offsetHeight/2) {
+          a+=1
+        }else if (-arr<0) {
+          if (a === 1) {
+            return
+          }else{
+            a-=1
+          }
+        }
+        this.getXplayerLocation()
+      }
+    },
+    xPlay(){
+      this.$refs.vi[0].play()
+    }
+
+  
   },
   computed: {
     assetsUrl() {
@@ -53,14 +109,8 @@ export default {
 .video-wrap{
   width: 100%;
   background-color: white;
-  box-shadow: 0 8px 12px #ebedf0;
-  box-sizing: border-box;
-  margin-bottom: 8px;
+  margin: 0 0 8px;
 }
-.bg-video {
-  width: 100%;
-  margin: 5px 0;
-  object-fit: fill
-}
+
 </style>
 
